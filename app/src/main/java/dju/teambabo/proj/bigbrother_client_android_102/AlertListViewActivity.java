@@ -42,7 +42,7 @@ public class AlertListViewActivity extends AppCompatActivity {
         setContentView(R.layout.activity_alert_list_view);
         mList = new ArrayList<String>();
         mListView= (ListView) findViewById(R.id.listview1);
-        mAdapter =  new ArrayAdapter(this, android.R.layout.simple_list_item_1, mList);
+        mAdapter =  new ArrayAdapter(this, R.layout.listview_theme , mList);
         mListView.setAdapter(mAdapter);
         loadAlertList();
 
