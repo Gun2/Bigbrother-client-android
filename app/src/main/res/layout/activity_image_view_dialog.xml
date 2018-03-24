@@ -10,9 +10,9 @@
         android:id="@+id/imageView"
         android:layout_width="fill_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/keyword"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="33dp" />
+        android:layout_marginBottom="49dp"
+        android:layout_above="@+id/causeView"
+        android:layout_alignParentStart="true" />
 
     <TextView
         android:id="@+id/keyword"
@@ -30,5 +30,6 @@
         android:layout_above="@+id/keyword"
         android:layout_alignParentEnd="true"
         android:layout_alignParentStart="true"
-        android:textSize="24sp" />
+        android:textColor="@android:color/white"
+        android:textSize="18sp" />
 </RelativeLayout>

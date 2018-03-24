@@ -443,12 +443,16 @@ public class LoginActivity extends AppCompatActivity {
 
         byte[] data = new byte[1024];
         byte[] encode = key.getBytes();
+        int flag = 0;
         //fis.read(data);
         //i 는 1~sha256.length 암호 강도
         while((input=fis.read(data))!=-1){
-            for (int i = 0 ; i<5; i++){
-                data[i] = (byte)(data[i]^encode[i]);
+            if (flag>1) {
+                for (int i = 0; i < encode.length; i++) {
+                    data[i] = (byte) (data[i] ^ encode[i]);
+                }
             }
+            flag ++;
             //Log.d(TAG, Arrays.toString(data));
             fos.write(data, 0, input);
 

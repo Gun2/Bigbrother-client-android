@@ -4,7 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="dju.teambabo.proj.bigbrother_client_android_102.AlertListViewActivity">
+    android:background="@drawable/listviewbg"
+    >
+tools:context="dju.teambabo.proj.bigbrother_client_android_102.AlertListViewActivity">
 
     <ListView
         android:id="@+id/listview1"
