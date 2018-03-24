@@ -50,6 +50,7 @@ public class BitmapUtils {
         return Bitmap.createScaledBitmap(srcBitmap, srcBitmap.getWidth()/6, srcBitmap.getHeight()/6, true);
     }
 
+
     public static InputStream bitmapToInputStream(Bitmap srcBitmap){
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         srcBitmap.compress(Bitmap.CompressFormat.PNG, 0 /*ignored for PNG*/, bos);
@@ -63,6 +64,7 @@ public class BitmapUtils {
         byte[] byteArray = byteArrayOutputStream .toByteArray();
         return Base64.encodeToString(byteArray, Base64.DEFAULT);
     }
+
 
 
 }

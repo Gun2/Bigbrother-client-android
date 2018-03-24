@@ -329,7 +329,7 @@ public class CameraLuncherActivity extends AppCompatActivity {
                         annotateImageRequestLabel.setFeatures(new ArrayList<Feature>() {{
                             Feature labelDetection = new Feature();
                             labelDetection.setType("LABEL_DETECTION");
-                            labelDetection.setMaxResults(10);
+                            labelDetection.setMaxResults(20);
                             add(labelDetection);
                         }});
 
@@ -416,15 +416,20 @@ public class CameraLuncherActivity extends AppCompatActivity {
         if (uri != null) {
             try {
                 double Random = Math.random();
-                Log.d(TAG, ToSha256(String.valueOf(Random)));
+               //Log.d(TAG, ToSha256(String.valueOf(Random)));
+
                 String RandomKey = ToSha256(String.valueOf(Random));
 
+                //Log.d(TAG,"getBitmapOfWidth"+BitmapUtils.getBitmapOfWidth(mCurrentPhotoPath));
                 Bitmap bitmap = BitmapUtils.rotateBitmapOrientation(mCurrentPhotoPath);
+
+                //이미지 해상도 구하기
+                int ImageSize = ImageSizeAutoMinimize.getBitmapOfWidth(mCurrentPhotoPath)*ImageSizeAutoMinimize.getBitmapOfHeight(mCurrentPhotoPath);
                 //이미지 파일 암호화
                 StreamImageFileEncode(mCurrentPhotoPath, RandomKey);
 
-                //bitmap = BitmapUtils.minimizeBitmap(bitmap);
-                bitmap = BitmapUtils.minimizeBitmap(bitmap);
+
+                bitmap = ImageSizeAutoMinimize.AutominimizeBitmap(bitmap, ImageSize);
 
 
                 callCloudVisionLabel(bitmap, mCurrentPhotoPath, RandomKey);
@@ -659,11 +664,15 @@ public class CameraLuncherActivity extends AppCompatActivity {
         byte[] data = new byte[1024];
         byte[] encode = key.getBytes();
 
+        int flag = 0;
         //i 는 1~sha256.length 암호 강도
         while((input=fis.read(data))!=-1){
-            for (int i = 0 ; i<5; i++){
-                data[i] = (byte)(data[i]^encode[i]);
+            if (flag>1) {
+                for (int i = 0; i < encode.length; i++) {
+                    data[i] = (byte) (data[i] ^ encode[i]);
+                }
             }
+            flag ++;
             //Log.d(TAG, Arrays.toString(data));
             fos.write(data, 0, input);
 
