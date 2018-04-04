@@ -415,6 +415,8 @@ public class CameraLuncherActivity extends AppCompatActivity {
     public void uploadImage(Uri uri) {
         if (uri != null) {
             try {
+
+                //키값 생성
                 double Random = Math.random();
                //Log.d(TAG, ToSha256(String.valueOf(Random)));
 
@@ -507,6 +509,7 @@ public class CameraLuncherActivity extends AppCompatActivity {
      * 사진엑티비티 호출 가능여부 검사
      */
     private void captureCamera() {
+
         String state = Environment.getExternalStorageState();
         // 외장 메모리 검사
         if (Environment.MEDIA_MOUNTED.equals(state)) {
@@ -651,7 +654,7 @@ public class CameraLuncherActivity extends AppCompatActivity {
     public void StreamImageFileEncode(String path, String key) throws IOException {
 
         File file1 = new File(path);
-        File file2 = new File(path+"(IS_LOOK)");
+        File file2 = new File(path+"(IS_LOCK)");
 
         FileInputStream fis = new FileInputStream(file1);
         FileOutputStream fos = new FileOutputStream(file2);

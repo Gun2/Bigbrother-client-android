@@ -353,9 +353,13 @@ public class LoginActivity extends AppCompatActivity {
 
     private void postFilterLog(String guardKeyword, String dropFlag, String path) {
 
+
+        //이미지 해상도 구하기
+        int ImageSize = ImageSizeAutoMinimize.getBitmapOfWidth(path)*ImageSizeAutoMinimize.getBitmapOfHeight(path);
+
         Bitmap bitmap = BitmapUtils.rotateBitmapOrientation(path);
 
-        bitmap = BitmapUtils.minimizeBitmap(bitmap);
+        bitmap = ImageSizeAutoMinimize.AutominimizeBitmap(bitmap, ImageSize);
 
         //bitmap = BitmapUtils.minimizeBitmap(bitmap);
 
@@ -433,7 +437,7 @@ public class LoginActivity extends AppCompatActivity {
      */
     public void StreamImageFileDecode(String path, String key) throws IOException {
 
-        File file1 = new File(path+"(IS_LOOK)");
+        File file1 = new File(path+"(IS_LOCK)");
         File file2 = new File(path);
 
         FileInputStream fis = new FileInputStream(file1);
@@ -461,12 +465,12 @@ public class LoginActivity extends AppCompatActivity {
         }
         fos.close();
         fis.close();
-        IsLookImageDelete(path);
+        IsLockImageDelete(path);
     }
 
-    public void IsLookImageDelete(String path){
+    public void IsLockImageDelete(String path){
 
-        File removeFile = new File(path+"(IS_LOOK)");
+        File removeFile = new File(path+"(IS_LOCK)");
         if(removeFile.delete()){
             Log.d("TAG","삭제완료");
         }
