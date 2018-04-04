@@ -76,7 +76,7 @@ public class CameraLuncherActivity extends AppCompatActivity {
     /***
      * 구글 클라우드 비전 설정값
      */
-    private static final String CLOUD_VISION_API_KEY = "AIzaSyCOtCOQ7Ju-15r9-XX8-bFDOA3dqw-XjGA\n";
+    private static final String CLOUD_VISION_API_KEY = "";
     private static final String ANDROID_CERT_HEADER = "X-Android-Cert";
     private static final String ANDROID_PACKAGE_HEADER = "X-Android-Package";
 
