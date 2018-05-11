@@ -11,6 +11,8 @@
     <string name="post_alert_log">/bigbrother_sniper/api/bigbrother/post/alert/message/</string>
     <string name="load_alert_list">/bigbrother_sniper/api/load/alert/list/</string>
     <string name="load_alert_image">/bigbrother_sniper/api/load/alert/image/</string>
+    <string name="text_guard_list_beacon">/bigbrother_sniper/api/bigbrother/guard/list/text/beacon/</string>
+    <string name="label_guard_list_beacon">/bigbrother_sniper/api/bigbrother/guard/list/label/beacon/</string>
 
     <string name="auth_key">Authorization</string>
 

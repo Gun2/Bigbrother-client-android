@@ -99,7 +99,6 @@ public class CameraLuncherActivity extends AppCompatActivity {
      */
     private final String BROADCAST_MESSAGE_POSTLOG = "dju.teambabo.proj.bigbrother_client_android_102.PostLog";
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -158,7 +157,7 @@ public class CameraLuncherActivity extends AppCompatActivity {
                         guardListText.add(guardTempText);
                     }
 
-                    String test001 = guardListText.get(0).get_arrData();
+                    //String test001 = guardListText.get(0).get_arrData();
 
 
                 } catch (Exception e) {
@@ -255,19 +254,6 @@ public class CameraLuncherActivity extends AppCompatActivity {
         return messageLabel+messageText;
     }
 
-    private String convertResponseToStringText(BatchAnnotateImagesResponse response, String path) {
-        String message = "I found these things:\n\n";
-
-        List<EntityAnnotation> texts = response.getResponses().get(0).getTextAnnotations();
-        if (texts != null) {
-            message += texts.get(0).getDescription();
-            SearchGuardListText(message, path);
-        } else {
-            message += "nothing";
-        }
-        Log.d("TAG", message);
-        return message;
-    }
     /***
      *
      * 구글 클라우드 비전에 값 전송
@@ -407,6 +393,7 @@ public class CameraLuncherActivity extends AppCompatActivity {
         }
         return Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, false);
     }
+
 
     /***
      *
@@ -584,30 +571,6 @@ public class CameraLuncherActivity extends AppCompatActivity {
 
         callReceivePostLog(guardKeywordLabel, guardKeywordText, dropFlag.toString(), path, key);
 
-
-    }
-
-    private void SearchGuardListText(String responseMessage, String path){
-        dropFlag=false;
-        guardKeywordText="텍스트 : ";
-
-        //텍스트 비교
-        for (int count = 0; count<guardListText.size(); count++){
-            /*일치 하는 단어 있으면*/
-            if(responseMessage.contains(guardListText.get(count).get_arrList())){
-                guardKeywordText += ("["+guardListText.get(count).get_arrList()+"] ");
-                if(guardListText.get(count).get_arrData()=="true"){
-                    dropFlag=true;
-
-
-                    break;
-                }
-
-            }
-        }
-        if (guardKeywordText!="다음과 같은 텍스트가 촬영되었습니다."&&dropFlag!=true){
-
-        }
 
     }
 
