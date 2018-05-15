@@ -23,8 +23,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:windowSoftInputMode="adjustResize"
-        >
+        android:windowSoftInputMode="adjustResize">
 
         <!-- 카메라 파일 프로바이더 -->
         <provider
@@ -56,9 +55,14 @@
         </receiver>
 
         <activity android:name=".AlertListViewActivity" />
-        <activity android:name=".ImageViewDialogActivity" android:theme="@android:style/Theme.Dialog">
+        <activity
+            android:name=".ImageViewDialogActivity"
+            android:theme="@android:style/Theme.Dialog"></activity>
 
-        </activity>
+        <service
+            android:name=".BigbrotherService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>

@@ -3,7 +3,7 @@
         Camera</string>
 
     <!--Bigbrother project-->
-    <string name="server_url">http://192.168.43.248:8000</string>
+    <string name="server_url">http://192.168.0.5:8000</string>
     <string name="token_key">bigbrother-token-key</string>
     <string name="user_auth_url">/bigbrother_sniper/api/user_auth/</string>
     <string name="text_guard_list">/bigbrother_sniper/api/bigbrother/guard/list/text/</string>
@@ -13,8 +13,12 @@
     <string name="load_alert_image">/bigbrother_sniper/api/load/alert/image/</string>
     <string name="text_guard_list_beacon">/bigbrother_sniper/api/bigbrother/guard/list/text/beacon/</string>
     <string name="label_guard_list_beacon">/bigbrother_sniper/api/bigbrother/guard/list/label/beacon/</string>
+    <string name="connection_Request">/bigbrother_sniper/api/alert/active/log/</string>
+
 
     <string name="auth_key">Authorization</string>
+    <!--Lock File Name-->
+    <string name="locked_file_name">(IS_LOCK)</string>
 
 
     <!-- Strings related to login -->

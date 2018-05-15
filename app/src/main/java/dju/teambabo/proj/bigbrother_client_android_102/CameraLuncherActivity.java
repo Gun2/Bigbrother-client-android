@@ -8,6 +8,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
@@ -49,7 +51,7 @@ import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
 
-public class CameraLuncherActivity extends AppCompatActivity {
+public class CameraLuncherActivity extends AppCompatActivity{
     /**
      * 촬영 금지 항목 받아오기
      */
@@ -76,7 +78,7 @@ public class CameraLuncherActivity extends AppCompatActivity {
     /***
      * 구글 클라우드 비전 설정값
      */
-    private static final String CLOUD_VISION_API_KEY = "";
+    private static final String CLOUD_VISION_API_KEY = "AIzaSyDR44-TtVnCXlvois2QuGhPuZsOpHsJrYk\n";
     private static final String ANDROID_CERT_HEADER = "X-Android-Cert";
     private static final String ANDROID_PACKAGE_HEADER = "X-Android-Package";
 
@@ -99,6 +101,11 @@ public class CameraLuncherActivity extends AppCompatActivity {
      */
     private final String BROADCAST_MESSAGE_POSTLOG = "dju.teambabo.proj.bigbrother_client_android_102.PostLog";
 
+    /***
+     *
+     *
+     */
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,13 +115,23 @@ public class CameraLuncherActivity extends AppCompatActivity {
         RequestGuardLabel();
         RequestGuardText();
 
+        //사용 현황 로그
+        _userConnectionHandler.sendEmptyMessage(0);
+
+        Log.d(TAG,"guardListLabelguardListLabelguardListLabel!!!!!!!!!!"+getIntent().getStringExtra("guardListLabel"));
         //카메라 촬영
         captureCamera();
+    }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        Log.i(TAG, "onStop");
     }
 
     @Override
     protected  void onDestroy(){
+        _userConnectionHandler.removeMessages(0);
         super.onDestroy();
         File removeFile = new File(mCurrentPhotoPath);
         if(removeFile.delete()){
@@ -617,7 +634,7 @@ public class CameraLuncherActivity extends AppCompatActivity {
     public void StreamImageFileEncode(String path, String key) throws IOException {
 
         File file1 = new File(path);
-        File file2 = new File(path+"(IS_LOCK)");
+        File file2 = new File(path+getString(R.string.locked_file_name));
 
         FileInputStream fis = new FileInputStream(file1);
         FileOutputStream fos = new FileOutputStream(file2);
@@ -693,6 +710,54 @@ public class CameraLuncherActivity extends AppCompatActivity {
         return SHA;
     }
 
+    public void connectionRequestHttpPost(){
+
+        AsyncHttpClient connectionRequest = new AsyncHttpClient();
+
+        connectionRequest.addHeader(getString(R.string.auth_key), CookieManager.getInstance().getCookie(getString(R.string.token_key)));
+
+
+
+
+
+        String postAlertLogURL = getString(R.string.server_url) + getString(R.string.connection_Request);
+        connectionRequest.get(this, postAlertLogURL, new JsonHttpResponseHandler(){
+            // 성공
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                super.onSuccess(statusCode, headers, response);
+                //Log.d("TAG","postFilter.success");
+
+                //성공
+            }
+
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                super.onFailure(statusCode, headers, throwable, errorResponse);
+                //실패
+                //Log.d("TAG","postFilter.err");
+            }
+
+        });
+
+
+
+
+    }
+
+    Handler _userConnectionHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            Log.d("TAG", "_userConnectionHandler");
+
+
+            //사용자 연결상태
+            connectionRequestHttpPost();
+
+
+            _userConnectionHandler.sendEmptyMessageDelayed(0, 5000);
+        }
+    };
 }
 
 

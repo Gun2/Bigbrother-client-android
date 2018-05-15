@@ -40,6 +40,7 @@ import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -60,7 +61,7 @@ import static java.lang.Boolean.TRUE;
  */
 
 
-public class LoginActivity extends AppCompatActivity implements BeaconConsumer{
+public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
     /**
      *
      *  브로드캐스트 설정
@@ -92,6 +93,13 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer{
     public void mapAccessDenied(int id) {
         Log.i("TAG", "MAP DENIED");
     }
+    /**
+     * 촬영 금지 항목 받아오기
+     */
+    private ArrayList<ArrayList<String>> guardListText = new ArrayList<>();
+    private ArrayList<String> guardTempText = new ArrayList<>();
+    private ArrayList<ArrayList<String>> guardListLabel = new ArrayList<>();
+    private ArrayList<String> guardTempLabel = new ArrayList<>();
 
     /**
      *
@@ -122,9 +130,12 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer{
     /**
      * 비콘UUID, 거리 저장
      */
-    private ArrayList<String> BeaconInfoList = new ArrayList<>();
-    private TwinLists BeaconTempInfo;
-
+    private ArrayList<ArrayList<String>> BeaconInfoList = new ArrayList<>();
+    private ArrayList<String> BeaconChildList = new ArrayList<>();
+    /**
+     * 비콘 UUID 수집 플래그 True면 수집중 false면(uuid전송 후) 초기화
+     */
+    private Boolean BeaconChargeFlag = false;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -156,8 +167,18 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer{
         @breif 비콘 탐지 시작
          */
         beaconManager.bind(this);
+
     }
 
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        detroyReceiver();
+        _beaconSearchHandler.removeMessages(0);
+
+
+    }
 
     private void initViewElements() {
         _loginButton = (Button)findViewById(R.id.login_button);
@@ -355,12 +376,6 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer{
 
 
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        detroyReceiver();
-
-    }
 
 
     /**
@@ -517,7 +532,7 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer{
      */
     public void StreamImageFileDecode(String path, String key) throws IOException {
 
-        File file1 = new File(path+"(IS_LOCK)");
+        File file1 = new File(path+getString(R.string.locked_file_name));
         File file2 = new File(path);
 
         FileInputStream fis = new FileInputStream(file1);
@@ -572,9 +587,24 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer{
             // region에는 비콘들에 대응하는 Region 객체가 들어온다.
             public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
                 if (beacons.size() > 0) {
-                    beaconList.clear();
+
+                    //비콘 수집상태 만들기
+                    if (BeaconChargeFlag == false) {
+                        beaconList.clear();
+                        BeaconChargeFlag=true;
+                    }
+
+
                     for (Beacon beacon : beacons) {
-                        beaconList.add(beacon);
+                        int num = (beaconList.indexOf(beacon));
+                        if (num != -1){
+                            beaconList.remove(num);
+                            beaconList.add(beacon);
+                        }
+
+                        else {
+                            beaconList.add(beacon);
+                        }
                     }
                 }
             }
@@ -609,9 +639,12 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer{
 
             int flag = 0;
             BeaconInfoList.clear();
+            BeaconChildList.clear();
+
             //ckBea();
             //_beaconSerchDataTextView.setText("");
             for (Beacon beacon : beaconList) {
+                BeaconChildList = new ArrayList<String>();
                 beaconUuidTextData = (beacon.getId1().toString()).replace("-","");
                 //Log.d("TAG", "1 "+beaconUuidTextData);
                 //beaconLimitDistance = (int)parseDouble(String.format("%.3f", beacon.getDistance()));
@@ -619,8 +652,12 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer{
                 //BeaconTempInfo = new TwinLists((beacon.getId1().toString()).replace("-",""), ((int)(beacon.getDistance()*100)));
                 //_beaconSerchDataTextView.append("강의실 : " + _beaconUuidTextData.substring(15, 20)  + "\nDistance : " + parseDouble(String.format("%.3f", beacon.getDistance())) + "m\n");
                 //_beaconSearchStatusTextView.setText("비콘 연결됨");
-                BeaconInfoList.add((beacon.getId1().toString()).replace("-",""));
 
+                //BeaconInfoList.add((beacon.getId1().toString()).replace("-",""));
+
+                BeaconChildList.add((beacon.getId1().toString()).replace("-",""));
+                BeaconChildList.add(String.valueOf((int)(beacon.getDistance()*100)));
+                BeaconInfoList.add(BeaconChildList);
                 //거리가 range변수를 넘어가면 탈출
                 if ((beacon.getDistance()) > BEACON_REMIT_RANGE) {
                     //nonckBea(); //비콘해제
@@ -632,21 +669,43 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer{
                 }
 
             }
-            Log.d("TAG", "BeaconInfoList: "+BeaconInfoList);
 
-            testMethod();
+            Log.d("TAG", "BeaconInfoList: "+BeaconInfoList);
+            Log.d("TAG", "test: "+BeaconInfoList);
+
+
+
+            //정기적 요청사항 메소드
+            filterRequestHttpPost();
+            BeaconChargeFlag=false;
 
 
             if (flag == 0)
-                // 자기 자신을 1초마다 호출
-                _beaconSearchHandler.sendEmptyMessageDelayed(0, 1000);
+                // 자기 자신을 x초마다 호출 -- sendEmptyMessageDelayed(0, x)
+                _beaconSearchHandler.sendEmptyMessageDelayed(0, 7000);
         }
     };
 
-    public void testMethod(){
+    /**
+     *
+     * 카메라 촬영 시작 시 정기적 수행 메소드
+     */
+    public void regularRequestInHandler(){
+
+        //지역 별 필터값 받아오기
+        filterRequestHttpPost();
+
+        //비콘 수집 상태
+        //BeaconChargeFlag=false;
+
+    }
 
 
-////////////////////////////
+    /**
+     * 지역 필터값 요청
+     */
+    public void filterRequestHttpPost(){
+
         AsyncHttpClient filteringListPostBeacon = new AsyncHttpClient();
 
         filteringListPostBeacon.addHeader(getString(R.string.auth_key), CookieManager.getInstance().getCookie(getString(R.string.token_key)));
@@ -665,10 +724,36 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer{
         filteringListPostBeacon.post(this, postAlertLogURL, params, new JsonHttpResponseHandler(){
             // 성공
             @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
                 super.onSuccess(statusCode, headers, response);
                 //Log.d("TAG","postFilter.success");
 
+                try {
+
+                    int count;
+                    guardListLabel.clear();
+                    guardTempLabel.clear();
+                    for (count = 0; count < response.length(); count++) {
+                        JSONArray ja = response;
+                        JSONObject order = ja.optJSONObject(count);
+                        guardTempLabel = new ArrayList<String>();
+                        guardTempLabel.add (order.getString("label_value"));
+                        guardTempLabel.add (order.getString("drop_on_flag"));
+                        guardTempLabel.add (order.getString("location"));
+
+                        guardListLabel.add(guardTempLabel);
+                    }
+
+                } catch (Exception e) {
+                    //응답은 성공하였으나 값이 올바르지 않음
+                    e.printStackTrace();
+                }
+                Intent intent = new Intent(getApplicationContext(),CameraLuncherActivity.class);
+
+                intent.putExtra("guardListLabel", "testtest");
+                Log.d("TAG", guardListLabel.toString());
+
+                //intent.putExtra("keyword", keyword);
                 //성공
             }
 
@@ -685,8 +770,7 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer{
 
 
 
-/////////////
-
     }
+
 }
 
