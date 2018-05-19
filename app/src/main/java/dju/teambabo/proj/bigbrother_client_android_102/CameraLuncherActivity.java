@@ -8,6 +8,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
@@ -49,15 +51,13 @@ import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
 
-public class CameraLuncherActivity extends AppCompatActivity {
+public class CameraLuncherActivity extends AppCompatActivity{
     /**
      * 촬영 금지 항목 받아오기
      */
 
-    private ArrayList<TwinLists> guardListText = new ArrayList<>();
-    private TwinLists guardTempText;
-    private ArrayList<TwinLists> guardListLabel = new ArrayList<>();
-    private TwinLists guardTempLabel;
+    private ArrayList<ArrayList<String>> guardListText = new ArrayList<>();
+    private ArrayList<ArrayList<String>> guardListLabel = new ArrayList<>();
 
     /**
      * 일치하는 사물 및 텍스트
@@ -76,7 +76,7 @@ public class CameraLuncherActivity extends AppCompatActivity {
     /***
      * 구글 클라우드 비전 설정값
      */
-    private static final String CLOUD_VISION_API_KEY = "";
+    private static final String CLOUD_VISION_API_KEY = "AIzaSyDR44-TtVnCXlvois2QuGhPuZsOpHsJrYk\n";
     private static final String ANDROID_CERT_HEADER = "X-Android-Cert";
     private static final String ANDROID_PACKAGE_HEADER = "X-Android-Package";
 
@@ -99,6 +99,10 @@ public class CameraLuncherActivity extends AppCompatActivity {
      */
     private final String BROADCAST_MESSAGE_POSTLOG = "dju.teambabo.proj.bigbrother_client_android_102.PostLog";
 
+    /***
+     *
+     *
+     */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,14 +113,35 @@ public class CameraLuncherActivity extends AppCompatActivity {
         RequestGuardLabel();
         RequestGuardText();
 
+        //사용 현황 로그
+        _userConnectionHandler.sendEmptyMessage(0);
+
+        //필터 갱신 핸들러
+        _filterRenewHandler.sendEmptyMessage(0);
+
         //카메라 촬영
         captureCamera();
+    }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        processCommand(intent);
+        super.onNewIntent(intent);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        Log.i(TAG, "onStop");
     }
 
     @Override
     protected  void onDestroy(){
         super.onDestroy();
+
+        _userConnectionHandler.removeMessages(0);
+        _filterRenewHandler.removeMessages(0);
+
         File removeFile = new File(mCurrentPhotoPath);
         if(removeFile.delete()){
             Log.d("TAG","삭제완");
@@ -124,6 +149,17 @@ public class CameraLuncherActivity extends AppCompatActivity {
         else{
             Log.d("TAG","삭제 ㄴㄴ");
         }
+    }
+
+
+
+    private void processCommand(Intent intent) {
+
+        if(intent != null){
+            String command = intent.getStringExtra("command");
+            Toast.makeText(this, "서비스로 부터 전달받은 데이터 :" + command, Toast.LENGTH_SHORT).show();
+        }
+
     }
 
     /****
@@ -148,7 +184,7 @@ public class CameraLuncherActivity extends AppCompatActivity {
                     int count;
 
                     guardListText.clear();
-
+/*
                     for (count = 0; count < response.length(); count++) {
                         JSONArray ja = response;
                         JSONObject order = ja.optJSONObject(count);
@@ -157,8 +193,8 @@ public class CameraLuncherActivity extends AppCompatActivity {
                         guardTempText = new TwinLists(text_value, drop_on_flag);
                         guardListText.add(guardTempText);
                     }
-
-                    String test001 = guardListText.get(0).get_arrData();
+*/
+                    //String test001 = guardListText.get(0).get_arrData();
 
 
                 } catch (Exception e) {
@@ -198,6 +234,7 @@ public class CameraLuncherActivity extends AppCompatActivity {
 
                     int count;
                     guardListLabel.clear();
+                    /*
                     for (count = 0; count < response.length(); count++) {
                         JSONArray ja = response;
                         JSONObject order = ja.optJSONObject(count);
@@ -206,6 +243,7 @@ public class CameraLuncherActivity extends AppCompatActivity {
                         guardTempLabel = new TwinLists(text_value, drop_on_flag);
                         guardListLabel.add(guardTempLabel);
                     }
+                    */
 
                 } catch (Exception e) {
                     //응답은 성공하였으나 값이 올바르지 않음
@@ -255,19 +293,6 @@ public class CameraLuncherActivity extends AppCompatActivity {
         return messageLabel+messageText;
     }
 
-    private String convertResponseToStringText(BatchAnnotateImagesResponse response, String path) {
-        String message = "I found these things:\n\n";
-
-        List<EntityAnnotation> texts = response.getResponses().get(0).getTextAnnotations();
-        if (texts != null) {
-            message += texts.get(0).getDescription();
-            SearchGuardListText(message, path);
-        } else {
-            message += "nothing";
-        }
-        Log.d("TAG", message);
-        return message;
-    }
     /***
      *
      * 구글 클라우드 비전에 값 전송
@@ -407,6 +432,7 @@ public class CameraLuncherActivity extends AppCompatActivity {
         }
         return Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, false);
     }
+
 
     /***
      *
@@ -552,9 +578,10 @@ public class CameraLuncherActivity extends AppCompatActivity {
         for (int count = 0; count<guardListLabel.size(); count++){
             /*물체에 일치 하는 단어 있으면*/
 
-            if(responseMessageLabel.contains(guardListLabel.get(count).get_arrList())){
-                guardKeywordLabel += ("["+guardListLabel.get(count).get_arrList()+"] ");
-                if(guardListLabel.get(count).get_arrData()=="true"){
+
+            if(responseMessageLabel.contains(guardListLabel.get(count).get(0))){
+                guardKeywordLabel += ("["+guardListLabel.get(count).get(0)+"] ");
+                if(guardListLabel.get(count).get(1)=="true"){
                     dropFlag=true;
                     // 전체 검색 하려면 주석 break;
                 }
@@ -567,9 +594,10 @@ public class CameraLuncherActivity extends AppCompatActivity {
             //텍스트 비교
             for (int count = 0; count < guardListText.size(); count++) {
             /*일치 하는 단어 있으면*/
-                if (responseMessageText.contains(guardListText.get(count).get_arrList())) {
-                    guardKeywordText += ("[" + guardListText.get(count).get_arrList() + "] ");
-                    if (guardListText.get(count).get_arrData() == "true") {
+
+                if (responseMessageText.contains(guardListText.get(count).get(0))) {
+                    guardKeywordText += ("[" + guardListText.get(count).get(0) + "] ");
+                    if (guardListText.get(count).get(1) == "true") {
                         dropFlag = true;
 
                         //전체검색 하려면 주석처리 break;
@@ -587,30 +615,6 @@ public class CameraLuncherActivity extends AppCompatActivity {
 
         callReceivePostLog(guardKeywordLabel, guardKeywordText, dropFlag.toString(), path, key);
 
-
-    }
-
-    private void SearchGuardListText(String responseMessage, String path){
-        dropFlag=false;
-        guardKeywordText="텍스트 : ";
-
-        //텍스트 비교
-        for (int count = 0; count<guardListText.size(); count++){
-            /*일치 하는 단어 있으면*/
-            if(responseMessage.contains(guardListText.get(count).get_arrList())){
-                guardKeywordText += ("["+guardListText.get(count).get_arrList()+"] ");
-                if(guardListText.get(count).get_arrData()=="true"){
-                    dropFlag=true;
-
-
-                    break;
-                }
-
-            }
-        }
-        if (guardKeywordText!="다음과 같은 텍스트가 촬영되었습니다."&&dropFlag!=true){
-
-        }
 
     }
 
@@ -654,7 +658,7 @@ public class CameraLuncherActivity extends AppCompatActivity {
     public void StreamImageFileEncode(String path, String key) throws IOException {
 
         File file1 = new File(path);
-        File file2 = new File(path+"(IS_LOCK)");
+        File file2 = new File(path+getString(R.string.locked_file_name));
 
         FileInputStream fis = new FileInputStream(file1);
         FileOutputStream fos = new FileOutputStream(file2);
@@ -730,6 +734,70 @@ public class CameraLuncherActivity extends AppCompatActivity {
         return SHA;
     }
 
+
+    /**
+     * 사용자 연결 현황 체크
+     */
+    public void connectionRequestHttpPost(){
+
+        AsyncHttpClient connectionRequest = new AsyncHttpClient();
+
+        connectionRequest.addHeader(getString(R.string.auth_key), CookieManager.getInstance().getCookie(getString(R.string.token_key)));
+
+
+
+
+
+        String postAlertLogURL = getString(R.string.server_url) + getString(R.string.connection_Request);
+        connectionRequest.get(this, postAlertLogURL, new JsonHttpResponseHandler(){
+            // 성공
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                super.onSuccess(statusCode, headers, response);
+                //Log.d("TAG","postFilter.success");
+
+                //성공
+            }
+
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                super.onFailure(statusCode, headers, throwable, errorResponse);
+                //실패
+                //Log.d("TAG","postFilter.err");
+            }
+
+        });
+
+
+
+
+    }
+
+    Handler _userConnectionHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            Log.d("TAG", "_userConnectionHandler");
+
+
+            //사용자 연결상태
+            connectionRequestHttpPost();
+
+
+            _userConnectionHandler.sendEmptyMessageDelayed(0, 5000);
+        }
+    };
+
+
+    Handler _filterRenewHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            Log.d("TAG", "_filterRenewHandler");
+
+            //필터 갱신
+            GlobalValue globalValue = (GlobalValue) getApplication();
+            guardListText = globalValue.getGlobalValueLabeldList();
+            _filterRenewHandler.sendEmptyMessageDelayed(0, 10000);
+        }
+    };
 }
 
 

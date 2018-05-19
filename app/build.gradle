@@ -30,6 +30,9 @@ dependencies {
 
     compile 'com.google.apis:google-api-services-vision:v1-rev2-1.21.0' exclude module: 'httpclient'
 
+    compile 'com.vistrav:ask:2.5'
+
+    compile 'org.altbeacon:android-beacon-library:2.+'
 
     compile 'com.android.support:appcompat-v7:26.+'
     compile 'com.android.support:design:26.+'
