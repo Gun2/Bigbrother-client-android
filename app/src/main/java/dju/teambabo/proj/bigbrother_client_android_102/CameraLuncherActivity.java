@@ -56,10 +56,8 @@ public class CameraLuncherActivity extends AppCompatActivity{
      * 촬영 금지 항목 받아오기
      */
 
-    private ArrayList<TwinLists> guardListText = new ArrayList<>();
-    private TwinLists guardTempText;
-    private ArrayList<TwinLists> guardListLabel = new ArrayList<>();
-    private TwinLists guardTempLabel;
+    private ArrayList<ArrayList<String>> guardListText = new ArrayList<>();
+    private ArrayList<ArrayList<String>> guardListLabel = new ArrayList<>();
 
     /**
      * 일치하는 사물 및 텍스트
@@ -118,9 +116,17 @@ public class CameraLuncherActivity extends AppCompatActivity{
         //사용 현황 로그
         _userConnectionHandler.sendEmptyMessage(0);
 
-        Log.d(TAG,"guardListLabelguardListLabelguardListLabel!!!!!!!!!!"+getIntent().getStringExtra("guardListLabel"));
+        //필터 갱신 핸들러
+        _filterRenewHandler.sendEmptyMessage(0);
+
         //카메라 촬영
         captureCamera();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        processCommand(intent);
+        super.onNewIntent(intent);
     }
 
     @Override
@@ -131,8 +137,11 @@ public class CameraLuncherActivity extends AppCompatActivity{
 
     @Override
     protected  void onDestroy(){
-        _userConnectionHandler.removeMessages(0);
         super.onDestroy();
+
+        _userConnectionHandler.removeMessages(0);
+        _filterRenewHandler.removeMessages(0);
+
         File removeFile = new File(mCurrentPhotoPath);
         if(removeFile.delete()){
             Log.d("TAG","삭제완");
@@ -140,6 +149,17 @@ public class CameraLuncherActivity extends AppCompatActivity{
         else{
             Log.d("TAG","삭제 ㄴㄴ");
         }
+    }
+
+
+
+    private void processCommand(Intent intent) {
+
+        if(intent != null){
+            String command = intent.getStringExtra("command");
+            Toast.makeText(this, "서비스로 부터 전달받은 데이터 :" + command, Toast.LENGTH_SHORT).show();
+        }
+
     }
 
     /****
@@ -164,7 +184,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
                     int count;
 
                     guardListText.clear();
-
+/*
                     for (count = 0; count < response.length(); count++) {
                         JSONArray ja = response;
                         JSONObject order = ja.optJSONObject(count);
@@ -173,7 +193,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
                         guardTempText = new TwinLists(text_value, drop_on_flag);
                         guardListText.add(guardTempText);
                     }
-
+*/
                     //String test001 = guardListText.get(0).get_arrData();
 
 
@@ -214,6 +234,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
 
                     int count;
                     guardListLabel.clear();
+                    /*
                     for (count = 0; count < response.length(); count++) {
                         JSONArray ja = response;
                         JSONObject order = ja.optJSONObject(count);
@@ -222,6 +243,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
                         guardTempLabel = new TwinLists(text_value, drop_on_flag);
                         guardListLabel.add(guardTempLabel);
                     }
+                    */
 
                 } catch (Exception e) {
                     //응답은 성공하였으나 값이 올바르지 않음
@@ -556,9 +578,10 @@ public class CameraLuncherActivity extends AppCompatActivity{
         for (int count = 0; count<guardListLabel.size(); count++){
             /*물체에 일치 하는 단어 있으면*/
 
-            if(responseMessageLabel.contains(guardListLabel.get(count).get_arrList())){
-                guardKeywordLabel += ("["+guardListLabel.get(count).get_arrList()+"] ");
-                if(guardListLabel.get(count).get_arrData()=="true"){
+
+            if(responseMessageLabel.contains(guardListLabel.get(count).get(0))){
+                guardKeywordLabel += ("["+guardListLabel.get(count).get(0)+"] ");
+                if(guardListLabel.get(count).get(1)=="true"){
                     dropFlag=true;
                     // 전체 검색 하려면 주석 break;
                 }
@@ -571,9 +594,10 @@ public class CameraLuncherActivity extends AppCompatActivity{
             //텍스트 비교
             for (int count = 0; count < guardListText.size(); count++) {
             /*일치 하는 단어 있으면*/
-                if (responseMessageText.contains(guardListText.get(count).get_arrList())) {
-                    guardKeywordText += ("[" + guardListText.get(count).get_arrList() + "] ");
-                    if (guardListText.get(count).get_arrData() == "true") {
+
+                if (responseMessageText.contains(guardListText.get(count).get(0))) {
+                    guardKeywordText += ("[" + guardListText.get(count).get(0) + "] ");
+                    if (guardListText.get(count).get(1) == "true") {
                         dropFlag = true;
 
                         //전체검색 하려면 주석처리 break;
@@ -710,6 +734,10 @@ public class CameraLuncherActivity extends AppCompatActivity{
         return SHA;
     }
 
+
+    /**
+     * 사용자 연결 현황 체크
+     */
     public void connectionRequestHttpPost(){
 
         AsyncHttpClient connectionRequest = new AsyncHttpClient();
@@ -756,6 +784,18 @@ public class CameraLuncherActivity extends AppCompatActivity{
 
 
             _userConnectionHandler.sendEmptyMessageDelayed(0, 5000);
+        }
+    };
+
+
+    Handler _filterRenewHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            Log.d("TAG", "_filterRenewHandler");
+
+            //필터 갱신
+            GlobalValue globalValue = (GlobalValue) getApplication();
+            guardListText = globalValue.getGlobalValueLabeldList();
+            _filterRenewHandler.sendEmptyMessageDelayed(0, 10000);
         }
     };
 }

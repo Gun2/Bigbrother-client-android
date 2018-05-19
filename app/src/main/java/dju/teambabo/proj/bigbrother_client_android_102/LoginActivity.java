@@ -168,6 +168,8 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
          */
         beaconManager.bind(this);
 
+
+
     }
 
 
@@ -748,10 +750,12 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
                     //응답은 성공하였으나 값이 올바르지 않음
                     e.printStackTrace();
                 }
-                Intent intent = new Intent(getApplicationContext(),CameraLuncherActivity.class);
 
-                intent.putExtra("guardListLabel", "testtest");
-                Log.d("TAG", guardListLabel.toString());
+                //전역변수 세팅
+                GlobalValue globalValue = (GlobalValue) getApplication();
+                globalValue.setGlobalValueLabeldList(guardListLabel);
+
+                //Log.d("TAG", globalValue.getGlobalValueLabeldList().toString());
 
                 //intent.putExtra("keyword", keyword);
                 //성공
