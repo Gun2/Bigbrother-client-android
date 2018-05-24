@@ -15,10 +15,10 @@ public class GlobalValue extends Application {
      */
     private ArrayList<ArrayList<String>> guardListText = new ArrayList<>();
     private ArrayList<String> guardTempText = new ArrayList<>();
-    private ArrayList<ArrayList<String>> guardListLabel = new ArrayList<>();
+    private ArrayList<FilterList> guardListLabel = new ArrayList<>();
     private ArrayList<String> guardTempLabel = new ArrayList<>();
 
-    public ArrayList<ArrayList<String>> getGlobalValueLabeldList(){
+    public ArrayList<FilterList> getGlobalValueLabeldList(){
 
         return guardListLabel;
     }
@@ -28,7 +28,7 @@ public class GlobalValue extends Application {
         return guardListText;
     }
 
-    public void setGlobalValueLabeldList(ArrayList<ArrayList<String>> mList){
+    public void setGlobalValueLabeldList(ArrayList<FilterList> mList){
         this.guardListLabel = mList;
     }
 

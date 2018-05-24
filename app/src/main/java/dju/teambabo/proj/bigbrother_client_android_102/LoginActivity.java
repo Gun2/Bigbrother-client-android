@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -82,6 +83,7 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
 
     private static final int MY_PERMISSION_CAMERA = 1111;
 
+    private static final int ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 1;
     //optional
     @AskGranted(Manifest.permission.ACCESS_FINE_LOCATION)
     public void mapAccessGranted(int id) {
@@ -98,8 +100,8 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
      */
     private ArrayList<ArrayList<String>> guardListText = new ArrayList<>();
     private ArrayList<String> guardTempText = new ArrayList<>();
-    private ArrayList<ArrayList<String>> guardListLabel = new ArrayList<>();
-    private ArrayList<String> guardTempLabel = new ArrayList<>();
+    private ArrayList<FilterList> guardListLabel = new ArrayList<>();
+    private FilterList guardTempLabel;
 
     /**
      *
@@ -168,7 +170,7 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
          */
         beaconManager.bind(this);
 
-
+        _filterRenewHandler.sendEmptyMessage(0);
 
     }
 
@@ -178,8 +180,11 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
         super.onDestroy();
         detroyReceiver();
         _beaconSearchHandler.removeMessages(0);
+        _filterRenewHandler.removeMessages(0);
 
-
+        //사물인식 서비스 종료
+        Intent detectorService = new Intent(this, DetectorService.class);
+        stopService(detectorService);
     }
 
     private void initViewElements() {
@@ -353,6 +358,15 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
                 //captureCamera();
             }
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE);
+            } else {
+                //startService(new Intent(MainActivity.this, MyService.class));
+            }
+        }
     }
 
     @Override
@@ -367,12 +381,24 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
                         return;
                     }
                 }
+
                 // 허용
 
                 //카메라 작동
                 //captureCamera();
 
-                break;
+                //break;
+            case ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE:
+                if (requestCode == ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        if (!Settings.canDrawOverlays(this)) {
+                            // 동의 안 함
+                        } else {
+                            //startService(new Intent(MainActivity.this, MyService.class));
+                        }
+                    }
+                }
+            break;
         }
     }
 
@@ -626,6 +652,7 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
         // 1초마다 불러온다.
         for (Beacon beacon : beaconList) {
             if ((beacon.getDistance()) < BEACON_REMIT_RANGE) {
+                _beaconSearchHandler.removeMessages(0);
                 _beaconSearchHandler.sendEmptyMessage(0);
             }
 
@@ -731,18 +758,17 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
                 //Log.d("TAG","postFilter.success");
 
                 try {
-
                     int count;
                     guardListLabel.clear();
-                    guardTempLabel.clear();
                     for (count = 0; count < response.length(); count++) {
                         JSONArray ja = response;
                         JSONObject order = ja.optJSONObject(count);
-                        guardTempLabel = new ArrayList<String>();
-                        guardTempLabel.add (order.getString("label_value"));
-                        guardTempLabel.add (order.getString("drop_on_flag"));
-                        guardTempLabel.add (order.getString("location"));
+                        String location = (order.getString("location"));
+                        String label_value = order.getString("label_value");
+                        Boolean drop_on_flag = order.getBoolean("drop_on_flag");
+                        Boolean picRequest = order.getBoolean("picRequest");
 
+                        guardTempLabel = new FilterList(location, label_value, drop_on_flag,picRequest);
                         guardListLabel.add(guardTempLabel);
                     }
 
@@ -755,6 +781,7 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
                 GlobalValue globalValue = (GlobalValue) getApplication();
                 globalValue.setGlobalValueLabeldList(guardListLabel);
 
+                Log.d("TAG","guardListLabel"+guardListLabel.toString());
                 //Log.d("TAG", globalValue.getGlobalValueLabeldList().toString());
 
                 //intent.putExtra("keyword", keyword);
@@ -767,6 +794,7 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
                 super.onFailure(statusCode, headers, throwable, errorResponse);
                 //실패
                 //Log.d("TAG","postFilter.err");
+                finish();
             }
 
         });
@@ -775,6 +803,20 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
 
 
     }
+
+
+    Handler _filterRenewHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            Log.d("TAG", "_filterRenewHandler");
+
+            //필터 갱신
+            GlobalValue globalValue = (GlobalValue) getApplication();
+            //guardListText = globalValue.getGlobalValueLabeldList();
+
+            Log.d("TAG","globalValue.getGlobalValueLabeldList : "+globalValue.getGlobalValueLabeldList().toString());
+            _filterRenewHandler.sendEmptyMessageDelayed(0, 7000);
+        }
+    };
 
 }
 
