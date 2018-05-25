@@ -3,7 +3,7 @@
         Camera</string>
 
     <!--Bigbrother project-->
-    <string name="server_url">http://172.30.1.48:8000</string>
+    <string name="server_url">http://172.30.1.20:8000</string>
     <string name="token_key">bigbrother-token-key</string>
     <string name="user_auth_url">/bigbrother_sniper/api/user_auth/</string>
     <string name="text_guard_list">/bigbrother_sniper/api/bigbrother/guard/list/text/</string>

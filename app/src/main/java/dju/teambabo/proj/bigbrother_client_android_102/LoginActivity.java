@@ -800,7 +800,7 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
                 super.onFailure(statusCode, headers, throwable, errorResponse);
                 //실패
                 //Log.d("TAG","postFilter.err");
-                finish();
+                //finish();
             }
 
         });
