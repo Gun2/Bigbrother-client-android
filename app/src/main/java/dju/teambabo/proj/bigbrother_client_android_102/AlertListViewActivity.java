@@ -51,6 +51,7 @@ public class AlertListViewActivity extends AppCompatActivity {
             public void onItemClick(final AdapterView<?> adapterView, View view, int position, long l) {
                 Position = position;
                 itemCheckEvent(list, Position);
+
             }
         });
 
