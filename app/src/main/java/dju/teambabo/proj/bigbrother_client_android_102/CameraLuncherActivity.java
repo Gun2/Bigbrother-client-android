@@ -48,16 +48,46 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import cz.msebera.android.httpclient.Header;
 
 public class CameraLuncherActivity extends AppCompatActivity{
+    /*
+    private static final Logger LOGGER = new Logger();
+
+    private static final int TF_OD_API_INPUT_SIZE = 600;
+    private static final String TF_OD_API_MODEL_FILE =
+            "file:///android_asset/ssd_mobilenet_v1_android_export.pb";
+    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/coco_labels_list.txt";
+
+    private Classifier classifier;*/
+    private Executor executor = Executors.newSingleThreadExecutor();
+
+/*
+    private void initTensorFlowAndLoadModel() {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    classifier = TensorFlowObjectDetectionAPIModel.create(
+                            getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
+                } catch (final Exception e) {
+                    throw new RuntimeException("Error initializing TensorFlow!", e);
+                }
+            }
+        });
+    }
+*/
+
     /**
      * 촬영 금지 항목 받아오기
      */
 
-    private ArrayList<ArrayList<String>> guardListText = new ArrayList<>();
-    private ArrayList<ArrayList<String>> guardListLabel = new ArrayList<>();
+    private ArrayList<FilterList> guardListText = new ArrayList<>();
+    private ArrayList<FilterList> guardListLabel = new ArrayList<>();
+    GlobalValue globalValue = (GlobalValue) getApplication();
 
     /**
      * 일치하는 사물 및 텍스트
@@ -88,9 +118,9 @@ public class CameraLuncherActivity extends AppCompatActivity{
     /**
      * 촬영한 사진 Uri값, 경로값
      */
-    Uri imageUri;
+    ArrayList<Uri> imageUri = new ArrayList<>();
 
-    String mCurrentPhotoPath;
+    ArrayList<String> mCurrentPhotoPath = new ArrayList<>();
 
     /**
      * 브로드캐스트 전송 주소
@@ -109,31 +139,47 @@ public class CameraLuncherActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera_luncher);
 
+        Intent detectorService = new Intent(this, DetectorService.class);
+        detectorService.putExtra("flag", true);
+        startService(detectorService);
+
         //감시할 값 가져오기
-        RequestGuardLabel();
-        RequestGuardText();
+        //RequestGuardLabel();
+        //RequestGuardText();
 
         //사용 현황 로그
         _userConnectionHandler.sendEmptyMessage(0);
 
         //필터 갱신 핸들러
         _filterRenewHandler.sendEmptyMessage(0);
-
+        //initTensorFlowAndLoadModel();
         //카메라 촬영
         captureCamera();
     }
+    @Override
+    protected  void onResume(){
+        super.onResume();
 
+    }
+
+/*
     @Override
     protected void onNewIntent(Intent intent) {
         processCommand(intent);
         super.onNewIntent(intent);
     }
+*/
+
 
     @Override
-    public void onStop() {
-        super.onStop();
-        Log.i(TAG, "onStop");
+    public void onRestart(){
+        super.onRestart();
+        Intent detectorService = new Intent(this, DetectorService.class);
+        detectorService.putExtra("flag", true);
+        startService(detectorService);
+
     }
+
 
     @Override
     protected  void onDestroy(){
@@ -142,17 +188,22 @@ public class CameraLuncherActivity extends AppCompatActivity{
         _userConnectionHandler.removeMessages(0);
         _filterRenewHandler.removeMessages(0);
 
-        File removeFile = new File(mCurrentPhotoPath);
-        if(removeFile.delete()){
-            Log.d("TAG","삭제완");
+        for (String PhotoPath : mCurrentPhotoPath) {
+            File removeFile = new File(PhotoPath);
+            if (removeFile.delete()) {
+                Log.d("TAG", "삭제완");
+            } else {
+                Log.d("TAG", "삭제 ㄴㄴ");
+            }
         }
-        else{
-            Log.d("TAG","삭제 ㄴㄴ");
-        }
+        //사물인식 서비스 종료
+        Intent detectorService = new Intent(this, DetectorService.class);
+        stopService(detectorService);
+
     }
 
 
-
+/*
     private void processCommand(Intent intent) {
 
         if(intent != null){
@@ -160,7 +211,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
             Toast.makeText(this, "서비스로 부터 전달받은 데이터 :" + command, Toast.LENGTH_SHORT).show();
         }
 
-    }
+    }*/
 
     /****
      * 사진에서 검색 할 텍스트 문자 가져오기
@@ -288,7 +339,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
         Log.d("TAG", messageText);
         Log.d("TAG", messageLabel);
 
-        SearchGuardListLabel(messageLabel ,messageText, path, key);
+        //SearchGuardListLabel(messageLabel ,messageText, path, key);
 
         return messageLabel+messageText;
     }
@@ -409,35 +460,14 @@ public class CameraLuncherActivity extends AppCompatActivity{
         }.execute();
     }
 
-    /***
-     *
-     * 사진 사이즈 다운 uri용
-     */
-    public Bitmap scaleBitmapDown(Bitmap bitmap, int maxDimension) {
 
-        int originalWidth = bitmap.getWidth();
-        int originalHeight = bitmap.getHeight();
-        int resizedWidth = maxDimension;
-        int resizedHeight = maxDimension;
-
-        if (originalHeight > originalWidth) {
-            resizedHeight = maxDimension;
-            resizedWidth = (int) (resizedHeight * (float) originalWidth / (float) originalHeight);
-        } else if (originalWidth > originalHeight) {
-            resizedWidth = maxDimension;
-            resizedHeight = (int) (resizedWidth * (float) originalHeight / (float) originalWidth);
-        } else if (originalHeight == originalWidth) {
-            resizedHeight = maxDimension;
-            resizedWidth = maxDimension;
-        }
-        return Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, false);
-    }
 
 
     /***
      *
      * 사진 가져오기 및 변형
      */
+    /*
     public void uploadImage(Uri uri) {
         if (uri != null) {
             try {
@@ -473,7 +503,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
         }
     }
 
-
+*/
     /**
      * 사진촬영 결과 반영값
      */
@@ -482,21 +512,49 @@ public class CameraLuncherActivity extends AppCompatActivity{
         switch (requestCode) {
             case REQUEST_TAKE_PHOTO:
                 if (resultCode == Activity.RESULT_OK) {
-                    try {
-                        Log.i("REQUEST_TAKE_PHOTO", "OK");
-                        uploadImage(imageUri);
+
+
+                    final Intent RecognizeService = new Intent(this, RecognizeImageService.class);
+
+                    executor.execute(new Runnable() {
+                         @Override
+                         public void run() {
+                             RecognizeService.putExtra("uri", imageUri.get(0));
+                             imageUri.remove(0);
+                             RecognizeService.putExtra("mCurrentPhotoPath", mCurrentPhotoPath.get(0));
+                             mCurrentPhotoPath.remove(0);
+                             //RecognizeService.putExtra("FilterList", guardListLabel);
+                             startService(RecognizeService);
+
+                           /*  try {
+
+                                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri.get(0));
+                                 imageUri.remove(0);
+                                 //키값 생성
+                                 double Random = Math.random();
+                                 //Log.d(TAG, ToSha256(String.valueOf(Random)));
+
+                                 String RandomKey = ToSha256(String.valueOf(Random));
+
+
+                                 StreamImageFileEncode(mCurrentPhotoPath.get(0), RandomKey);
+                                 mCurrentPhotoPath.remove(0);
+                                 bitmap = Bitmap.createScaledBitmap(bitmap, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE, false);
+                                 final List<Classifier.Recognition> results = classifier.recognizeImage(bitmap);
+                                 LOGGER.i("Detect: %s", results);
+
+
+                             }catch (final Exception e) {
+                                 throw new RuntimeException("Error  TensorFlow!", e);
+                             }*/
+                         }
+                    });
 
 
 
-                        //galleryAddPic(); //사진저장
-
-
-                    } catch (Exception e) {
-                        Log.e("REQUEST_TAKE_PHOTO", e.toString());
-                    }
-
+/*
                     RequestGuardLabel();
-                    RequestGuardText();
+                    RequestGuardText();*/
                     captureCamera();//카메라 다시 시작
                 } else {
                     Toast.makeText(CameraLuncherActivity.this, "사진찍기를 취소하였습니다.", Toast.LENGTH_SHORT).show();
@@ -508,6 +566,29 @@ public class CameraLuncherActivity extends AppCompatActivity{
     }
 
 
+    /***
+     *
+     * 사진 사이즈 다운 uri용
+     */
+    public Bitmap scaleBitmapDown(Bitmap bitmap, int maxDimension) {
+
+        int originalWidth = bitmap.getWidth();
+        int originalHeight = bitmap.getHeight();
+        int resizedWidth = maxDimension;
+        int resizedHeight = maxDimension;
+
+        if (originalHeight > originalWidth) {
+            resizedHeight = maxDimension;
+            resizedWidth = (int) (resizedHeight * (float) originalWidth / (float) originalHeight);
+        } else if (originalWidth > originalHeight) {
+            resizedWidth = maxDimension;
+            resizedHeight = (int) (resizedWidth * (float) originalHeight / (float) originalWidth);
+        } else if (originalHeight == originalWidth) {
+            resizedHeight = maxDimension;
+            resizedWidth = maxDimension;
+        }
+        return Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, false);
+    }
     /****
      *
      * 사진으로 찍은 이미지파일 저장
@@ -525,7 +606,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
         }
 
         imageFile = new File(storageDir, imageFileName);
-        mCurrentPhotoPath = imageFile.getAbsolutePath();
+        mCurrentPhotoPath.add(imageFile.getAbsolutePath());
         return imageFile;
 
 
@@ -552,7 +633,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
                     // getUriForFile의 두 번째 인자는 Manifest provier의 authorites와 일치해야 함
 
                     Uri providerURI = FileProvider.getUriForFile(this, "dju.teambabo.proj.bigbrother_client_android_102.fileprovider", photoFile);
-                    imageUri = providerURI;
+                    imageUri.add(providerURI);
 
                     // 인텐트에 전달할 때는 FileProvier의 Return값인 content://로만!!, providerURI의 값에 카메라 데이터를 넣어 보냄
                     takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, providerURI);
@@ -569,7 +650,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
     /*
      *단어비교
      */
-
+/*
     private void SearchGuardListLabel(String responseMessageLabel, String responseMessageText, String path, String key){
         guardKeywordLabel="사물(형체) : ";// 알림창 앞에 넣을 문자
         guardKeywordText="\n텍스트 : ";
@@ -578,7 +659,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
         for (int count = 0; count<guardListLabel.size(); count++){
             /*물체에 일치 하는 단어 있으면*/
 
-
+/*
             if(responseMessageLabel.contains(guardListLabel.get(count).get(0))){
                 guardKeywordLabel += ("["+guardListLabel.get(count).get(0)+"] ");
                 if(guardListLabel.get(count).get(1)=="true"){
@@ -594,7 +675,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
             //텍스트 비교
             for (int count = 0; count < guardListText.size(); count++) {
             /*일치 하는 단어 있으면*/
-
+/*
                 if (responseMessageText.contains(guardListText.get(count).get(0))) {
                     guardKeywordText += ("[" + guardListText.get(count).get(0) + "] ");
                     if (guardListText.get(count).get(1) == "true") {
@@ -616,7 +697,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
         callReceivePostLog(guardKeywordLabel, guardKeywordText, dropFlag.toString(), path, key);
 
 
-    }
+    }*/
 
     /**
      * 알림 로그 전달을 위해 리시버에게 요청
@@ -747,7 +828,6 @@ public class CameraLuncherActivity extends AppCompatActivity{
 
 
 
-
         String postAlertLogURL = getString(R.string.server_url) + getString(R.string.connection_Request);
         connectionRequest.get(this, postAlertLogURL, new JsonHttpResponseHandler(){
             // 성공
@@ -763,6 +843,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
                 super.onFailure(statusCode, headers, throwable, errorResponse);
+
                 //실패
                 //Log.d("TAG","postFilter.err");
             }
@@ -794,10 +875,12 @@ public class CameraLuncherActivity extends AppCompatActivity{
 
             //필터 갱신
             GlobalValue globalValue = (GlobalValue) getApplication();
-            guardListText = globalValue.getGlobalValueLabeldList();
-            _filterRenewHandler.sendEmptyMessageDelayed(0, 10000);
+            guardListLabel = globalValue.getGlobalValueLabeldList();
+            _filterRenewHandler.sendEmptyMessageDelayed(0, 7000);
         }
     };
+
+
 }
 
 

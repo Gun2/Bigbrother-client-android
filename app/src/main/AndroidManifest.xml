@@ -10,11 +10,16 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <uses-feature android:name="android.hardware.camera2" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <!-- To auto-complete the email text field in the login form with the user's emails -->
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
+
+    <!-- 최상위 뷰 -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.SYSTEM_OVERLAY_WINDOW" />
 
     <application
         android:name=".GlobalValue"
@@ -56,10 +61,19 @@
         </receiver>
 
         <activity android:name=".AlertListViewActivity" />
+        <activity android:name=".DetectorCameraActivity" />
         <activity
             android:name=".ImageViewDialogActivity"
-            android:theme="@android:style/Theme.Dialog"></activity>
+            android:theme="@android:style/Theme.Dialog" />
 
+        <service
+            android:name=".DetectorService"
+            android:enabled="true"
+            android:exported="true" />
+        <service
+            android:name=".RecognizeImageService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>
