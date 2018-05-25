@@ -4,19 +4,20 @@ package dju.teambabo.proj.bigbrother_client_android_102;
  * Created by chaegeonhui on 2018. 5. 23..
  */
 
-public class FilterList {
+public class FilterList{
 
     private  String _location;
     private  String _label_value;
     private  Boolean _drop_on_flag;
     private  Boolean _picRequest;
+    private  int _pk;
 
-
-    public FilterList(String location ,String label_value, Boolean drop_on_flag, Boolean picRequest){
+    public FilterList(String location ,String label_value, Boolean drop_on_flag, Boolean picRequest, int pk){
         _location = location;
         _label_value = label_value;
         _drop_on_flag = drop_on_flag;
         _picRequest = picRequest;
+        _pk = pk;
     }
     @Override
     public String toString() {
@@ -37,6 +38,10 @@ public class FilterList {
             resultString += _picRequest.toString() + " ";
         }
 
+        if (_pk >= 0) {
+            resultString += (_pk) + " ";
+        }
+
         return resultString.trim();
     }
 
@@ -55,5 +60,7 @@ public class FilterList {
     public Boolean get_picRequest(){
         return _picRequest;
     }
+
+    public int get_pk(){ return _pk; }
 
 }

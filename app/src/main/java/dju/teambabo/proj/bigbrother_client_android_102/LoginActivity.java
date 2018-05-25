@@ -8,7 +8,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -419,6 +418,12 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
         this.mReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+                if(intent.getAction().equals(BROADCAST_MESSAGE_POSTLOG)) {
+                    Toast.makeText(context,(intent.getStringExtra("message")), Toast.LENGTH_LONG).show();
+                }
+
+
+                  /*
                 if(intent.getAction().equals(BROADCAST_MESSAGE_POSTLOG)){
                     //Uri passUri = intent.getParcelableExtra("uri");
 
@@ -452,11 +457,11 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
                                 e.printStackTrace();
                             }
                         }
-                        postFilterLog(intent.getStringExtra("guardKeywordLabel")+intent.getStringExtra("guardKeywordText"),intent.getStringExtra("dropFlag"), intent.getStringExtra("path"));
+                        //postFilterLog(intent.getStringExtra("guardKeywordLabel")+intent.getStringExtra("guardKeywordText"),intent.getStringExtra("dropFlag"), intent.getStringExtra("path"));
 
                     }
                 }
-
+*/
             }
         };
 
@@ -472,7 +477,7 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
         }
 
     }
-
+/*
 
     private void postFilterLog(String guardKeyword, String dropFlag, String path) {
 
@@ -534,7 +539,7 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
         });
 
 
-    }
+    }*/
 
     /**
      * 사진 동기화 및 복호화 (StreamImageFileDecode(path, key))
@@ -767,8 +772,9 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
                         String label_value = order.getString("label_value");
                         Boolean drop_on_flag = order.getBoolean("drop_on_flag");
                         Boolean picRequest = order.getBoolean("picRequest");
+                        int pk = order.getInt("pk");
 
-                        guardTempLabel = new FilterList(location, label_value, drop_on_flag,picRequest);
+                        guardTempLabel = new FilterList(location, label_value, drop_on_flag,picRequest, pk);
                         guardListLabel.add(guardTempLabel);
                     }
 

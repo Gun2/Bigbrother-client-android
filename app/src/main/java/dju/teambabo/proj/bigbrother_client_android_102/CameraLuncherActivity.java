@@ -85,8 +85,9 @@ public class CameraLuncherActivity extends AppCompatActivity{
      * 촬영 금지 항목 받아오기
      */
 
-    private ArrayList<ArrayList<String>> guardListText = new ArrayList<>();
-    private ArrayList<ArrayList<String>> guardListLabel = new ArrayList<>();
+    private ArrayList<FilterList> guardListText = new ArrayList<>();
+    private ArrayList<FilterList> guardListLabel = new ArrayList<>();
+    GlobalValue globalValue = (GlobalValue) getApplication();
 
     /**
      * 일치하는 사물 및 텍스트
@@ -143,14 +144,14 @@ public class CameraLuncherActivity extends AppCompatActivity{
         startService(detectorService);
 
         //감시할 값 가져오기
-        RequestGuardLabel();
-        RequestGuardText();
+        //RequestGuardLabel();
+        //RequestGuardText();
 
         //사용 현황 로그
         _userConnectionHandler.sendEmptyMessage(0);
 
         //필터 갱신 핸들러
-        //_filterRenewHandler.sendEmptyMessage(0);
+        _filterRenewHandler.sendEmptyMessage(0);
         //initTensorFlowAndLoadModel();
         //카메라 촬영
         captureCamera();
@@ -185,7 +186,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
         super.onDestroy();
 
         _userConnectionHandler.removeMessages(0);
-        //_filterRenewHandler.removeMessages(0);
+        _filterRenewHandler.removeMessages(0);
 
         for (String PhotoPath : mCurrentPhotoPath) {
             File removeFile = new File(PhotoPath);
@@ -338,7 +339,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
         Log.d("TAG", messageText);
         Log.d("TAG", messageLabel);
 
-        SearchGuardListLabel(messageLabel ,messageText, path, key);
+        //SearchGuardListLabel(messageLabel ,messageText, path, key);
 
         return messageLabel+messageText;
     }
@@ -522,6 +523,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
                              imageUri.remove(0);
                              RecognizeService.putExtra("mCurrentPhotoPath", mCurrentPhotoPath.get(0));
                              mCurrentPhotoPath.remove(0);
+                             //RecognizeService.putExtra("FilterList", guardListLabel);
                              startService(RecognizeService);
 
                            /*  try {
@@ -648,7 +650,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
     /*
      *단어비교
      */
-
+/*
     private void SearchGuardListLabel(String responseMessageLabel, String responseMessageText, String path, String key){
         guardKeywordLabel="사물(형체) : ";// 알림창 앞에 넣을 문자
         guardKeywordText="\n텍스트 : ";
@@ -657,7 +659,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
         for (int count = 0; count<guardListLabel.size(); count++){
             /*물체에 일치 하는 단어 있으면*/
 
-
+/*
             if(responseMessageLabel.contains(guardListLabel.get(count).get(0))){
                 guardKeywordLabel += ("["+guardListLabel.get(count).get(0)+"] ");
                 if(guardListLabel.get(count).get(1)=="true"){
@@ -673,7 +675,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
             //텍스트 비교
             for (int count = 0; count < guardListText.size(); count++) {
             /*일치 하는 단어 있으면*/
-
+/*
                 if (responseMessageText.contains(guardListText.get(count).get(0))) {
                     guardKeywordText += ("[" + guardListText.get(count).get(0) + "] ");
                     if (guardListText.get(count).get(1) == "true") {
@@ -695,7 +697,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
         callReceivePostLog(guardKeywordLabel, guardKeywordText, dropFlag.toString(), path, key);
 
 
-    }
+    }*/
 
     /**
      * 알림 로그 전달을 위해 리시버에게 요청
@@ -822,7 +824,6 @@ public class CameraLuncherActivity extends AppCompatActivity{
         AsyncHttpClient connectionRequest = new AsyncHttpClient();
 
         connectionRequest.addHeader(getString(R.string.auth_key), CookieManager.getInstance().getCookie(getString(R.string.token_key)));
-        connectionRequest.setConnectTimeout(3000);
 
 
 
@@ -867,17 +868,17 @@ public class CameraLuncherActivity extends AppCompatActivity{
         }
     };
 
-/*
+
     Handler _filterRenewHandler = new Handler() {
         public void handleMessage(Message msg) {
             Log.d("TAG", "_filterRenewHandler");
 
             //필터 갱신
             GlobalValue globalValue = (GlobalValue) getApplication();
-            //guardListText = globalValue.getGlobalValueLabeldList();
-            _filterRenewHandler.sendEmptyMessageDelayed(0, 10000);
+            guardListLabel = globalValue.getGlobalValueLabeldList();
+            _filterRenewHandler.sendEmptyMessageDelayed(0, 7000);
         }
-    };*/
+    };
 
 
 }
