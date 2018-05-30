@@ -35,6 +35,7 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -151,7 +152,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
         _userConnectionHandler.sendEmptyMessage(0);
 
         //필터 갱신 핸들러
-        _filterRenewHandler.sendEmptyMessage(0);
+        //_filterRenewHandler.sendEmptyMessage(0);
         //initTensorFlowAndLoadModel();
         //카메라 촬영
         captureCamera();
@@ -186,7 +187,7 @@ public class CameraLuncherActivity extends AppCompatActivity{
         super.onDestroy();
 
         _userConnectionHandler.removeMessages(0);
-        _filterRenewHandler.removeMessages(0);
+        //_filterRenewHandler .removeMessages(0);
 
         for (String PhotoPath : mCurrentPhotoPath) {
             File removeFile = new File(PhotoPath);
@@ -832,10 +833,23 @@ public class CameraLuncherActivity extends AppCompatActivity{
         connectionRequest.get(this, postAlertLogURL, new JsonHttpResponseHandler(){
             // 성공
             @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
                 super.onSuccess(statusCode, headers, response);
                 //Log.d("TAG","postFilter.success");
 
+                Boolean recogFlag = false;
+                try {
+                        JSONArray ja = response;
+
+                        JSONObject order = ja.optJSONObject(0);
+                        recogFlag = order.getBoolean("recognizeFlag");
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                GlobalValue globalValue = (GlobalValue) getApplication();
+                globalValue.setRacognizeState(recogFlag);
                 //성공
             }
 
@@ -862,23 +876,26 @@ public class CameraLuncherActivity extends AppCompatActivity{
 
             //사용자 연결상태
             connectionRequestHttpPost();
+            GlobalValue globalValue = (GlobalValue) getApplication();
+
+            Log.d("TAG", "recognizeFlag"+globalValue.getRecognizeState());
 
 
             _userConnectionHandler.sendEmptyMessageDelayed(0, 5000);
         }
     };
 
-
+/*
     Handler _filterRenewHandler = new Handler() {
         public void handleMessage(Message msg) {
             Log.d("TAG", "_filterRenewHandler");
 
             //필터 갱신
             GlobalValue globalValue = (GlobalValue) getApplication();
-            guardListLabel = globalValue.getGlobalValueLabeldList();
+            //guardListLabel = globalValue.getGlobalValueLabeldList();
             _filterRenewHandler.sendEmptyMessageDelayed(0, 7000);
         }
-    };
+    };*/
 
 
 }

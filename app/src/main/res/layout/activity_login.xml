@@ -84,6 +84,13 @@
                 android:layout_height="wrap_content"
                 android:text="경고 목록 확인" />
 
+            <Switch
+                android:id="@+id/switch1"
+                android:layout_width="91dp"
+                android:layout_height="wrap_content"
+                android:text="서버인증방식"
+                android:textColor="@android:color/background_light" />
+
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

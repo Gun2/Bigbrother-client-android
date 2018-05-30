@@ -28,15 +28,18 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Message;
 import android.os.SystemClock;
 import android.os.Trace;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
 import android.view.Display;
 import android.view.KeyEvent;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -81,6 +84,7 @@ public class DetectorCameraActivity extends Activity implements OnImageAvailable
     private boolean useCamera2API;
     private int[] rgbBytes = null;
 
+    TextView LocationTextView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -91,10 +95,13 @@ public class DetectorCameraActivity extends Activity implements OnImageAvailable
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detector_camera);
         contexta = DetectorCameraActivity.this;
-
+        LocationTextView = (TextView) findViewById(R.id.LocationTextView);
         Intent intent = new Intent(this, DetectorService.class);
         intent.putExtra("flag", false);
         startService(intent);
+
+        _textviewRenewrHander.sendEmptyMessage(0);
+
 
         threadPool.execute( new Runnable()
         {
@@ -254,7 +261,7 @@ public class DetectorCameraActivity extends Activity implements OnImageAvailable
         LOGGER.d("onRestart " + this);
         super.onRestart();
         //사물인식 서비스 종료
-
+        _textviewRenewrHander.removeMessages(0);
         Intent detectorService = new Intent(this, DetectorService.class);
         detectorService.putExtra("flag", false);
         stopService(detectorService);
@@ -440,8 +447,8 @@ public class DetectorCameraActivity extends Activity implements OnImageAvailable
 
     private static final int TF_OD_API_INPUT_SIZE = 300;
     private static final String TF_OD_API_MODEL_FILE =
-            "file:///android_asset/ssd_mobilenet_v1_android_export.pb";
-    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/coco_labels_list.txt";
+            "file:///android_asset/frozen_test001_graph.pb";
+    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/coco_labels_list_test.txt";
     private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
     private static final boolean MAINTAIN_ASPECT = false;
     private static final Size DESIRED_PREVIEW_SIZE = new Size(640, 480);
@@ -682,4 +689,34 @@ public class DetectorCameraActivity extends Activity implements OnImageAvailable
 
         borderedText.drawLines(canvas, 10, canvas.getHeight() - 10, lines);
     }
+
+
+    Handler _textviewRenewrHander = new Handler() {
+        public void handleMessage(Message msg) {
+            Log.d("TAG", "_filterRenewHandler");
+
+            //필터 갱신
+            GlobalValue globalValue = (GlobalValue) getApplication();
+            ArrayList<FilterList> guardListLabel = globalValue.getGlobalValueLabeldList();
+            ArrayList<String>location = new ArrayList<>();
+            ArrayList<String>label = new ArrayList<>();
+            location.add("위치 :");
+            //label.add("");
+            for (FilterList guarLabel: guardListLabel){
+                label.add(guarLabel.get_label_value());
+                if (location.indexOf(guarLabel.get_location())<0){
+                    location.add(guarLabel.get_location());
+                }
+            }
+
+            if (location.isEmpty()){
+                LocationTextView.setText("");
+            }
+            else{
+                LocationTextView.setText(location.toString()+"\n"+label.toString());
+            }
+            Log.d("TAG", guardListLabel.toString());
+            _textviewRenewrHander.sendEmptyMessageDelayed(0, 5000);
+        }
+    };
 }

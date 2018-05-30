@@ -818,7 +818,7 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
             //필터 갱신
             GlobalValue globalValue = (GlobalValue) getApplication();
             //guardListText = globalValue.getGlobalValueLabeldList();
-
+            guardListLabel = globalValue.getGlobalValueLabeldList();
             Log.d("TAG","globalValue.getGlobalValueLabeldList : "+globalValue.getGlobalValueLabeldList().toString());
             _filterRenewHandler.sendEmptyMessageDelayed(0, 7000);
         }
