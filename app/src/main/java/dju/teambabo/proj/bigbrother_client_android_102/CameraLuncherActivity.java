@@ -520,12 +520,21 @@ public class CameraLuncherActivity extends AppCompatActivity{
                     executor.execute(new Runnable() {
                          @Override
                          public void run() {
+
+                             //RecognizeProcess.recognizeImage();
+
+                             /////
+
+
                              RecognizeService.putExtra("uri", imageUri.get(0));
                              imageUri.remove(0);
                              RecognizeService.putExtra("mCurrentPhotoPath", mCurrentPhotoPath.get(0));
                              mCurrentPhotoPath.remove(0);
                              //RecognizeService.putExtra("FilterList", guardListLabel);
                              startService(RecognizeService);
+
+                             ////
+
 
                            /*  try {
 
@@ -838,18 +847,19 @@ public class CameraLuncherActivity extends AppCompatActivity{
                 //Log.d("TAG","postFilter.success");
 
                 Boolean recogFlag = false;
+
                 try {
                         JSONArray ja = response;
 
                         JSONObject order = ja.optJSONObject(0);
                         recogFlag = order.getBoolean("recognizeFlag");
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
 
                 GlobalValue globalValue = (GlobalValue) getApplication();
                 globalValue.setRacognizeState(recogFlag);
+
                 //성공
             }
 

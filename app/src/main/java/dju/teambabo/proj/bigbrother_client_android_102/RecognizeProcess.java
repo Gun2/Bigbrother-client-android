@@ -1,13 +1,12 @@
 package dju.teambabo.proj.bigbrother_client_android_102;
 
-import android.app.Service;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.IBinder;
 import android.util.Log;
 import android.webkit.CookieManager;
 
+import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.loopj.android.http.SyncHttpClient;
@@ -25,14 +24,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import cz.msebera.android.httpclient.Header;
 import dju.teambabo.proj.bigbrother_client_android_102.env.Logger;
 
-public class RecognizeImageService extends Service {
+public class RecognizeProcess extends CameraLuncherActivity {
+
     private static final Logger LOGGER = new Logger();
     /**
      * 브로드캐스트 전송 주소
@@ -46,16 +43,16 @@ public class RecognizeImageService extends Service {
     /**
      * Detector
      */
-
-    private static final int TF_OD_API_INPUT_SIZE = 300;
+/*
+    private static final int TF_OD_API_INPUT_SIZE = 600;
     private static final String TF_OD_API_MODEL_FILE =
-            "file:///android_asset/frozen_inference_graph.pb";
-    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/coco_labels_list_test.txt";
-
+            "file:///android_asset/ssd_mobilenet_v1_android_export.pb";
+    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/coco_labels_list.txt";
+*/
     /**
      * recognize
      */
-/*
+
     private static final int TF_OD_API_INPUT_SIZE = 299;
     private static final int IMAGE_MEAN = 117;
     private static final float IMAGE_STD = 1;
@@ -66,14 +63,19 @@ public class RecognizeImageService extends Service {
     private static final String TF_OD_API_MODEL_FILE = "file:///android_asset/optimized_graph.pb";
     private static final String TF_OD_API_LABELS_FILE =
             "file:///android_asset/retrained_labels.txt";
-*/
-    private Classifier classifier;
-    private Executor executor = Executors.newSingleThreadExecutor();
 
-    /**
-     * 링크드리스트 스레드 풀
-     */
-    ThreadPoolExecutor threadPool = new ThreadPoolExecutor( 1, 1, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>() );
+
+    private Classifier classifier = TensorFlowImageClassifier.create(
+    getAssets(),
+    TF_OD_API_MODEL_FILE,
+    TF_OD_API_LABELS_FILE,
+    TF_OD_API_INPUT_SIZE,
+    IMAGE_MEAN,
+    IMAGE_STD,
+    INPUT_NAME,
+    OUTPUT_NAME);
+
+    private Executor executor = Executors.newSingleThreadExecutor();
 
 
     /**
@@ -112,84 +114,26 @@ public class RecognizeImageService extends Service {
     /**
      * 사용 가능 사이즈
      */
-    private int usableRecognizeLevel = 0;
+    private int usableRecognizeLevel;
 
-
-    /**
-     * RecognizeQue
-     */
-    private ArrayList<RecognizeQue> recognizeQue = new ArrayList<>();
-
-    private RecognizeQue queValue;
-
-    private void initTensorFlowAndLoadModel() {
-
-                try {
-
-                    /**
-                     * detector
-                     */
-
-                    classifier = TensorFlowObjectDetectionAPIModel.create(
-                            getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
-
-
-                    /**
-                     * recognize
-                     */
-/*
-                    classifier = TensorFlowImageClassifier.create(
-                            getAssets(),
-                            TF_OD_API_MODEL_FILE,
-                            TF_OD_API_LABELS_FILE,
-                            TF_OD_API_INPUT_SIZE,
-                            IMAGE_MEAN,
-                            IMAGE_STD,
-                            INPUT_NAME,
-                            OUTPUT_NAME);
-*/
-                } catch (final Exception e) {
-                    throw new RuntimeException("Error initializing TensorFlow!", e);
-                }
-
+    public RecognizeProcess() throws IOException {
     }
 
 
-    public RecognizeImageService() {
-    }
+    public void recognizeImage(Uri uri, String mCurrentPhotoPath){
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    @Override
-    public void onCreate() {
-
-        initTensorFlowAndLoadModel();
-
-
-    }
-
-    @Override
-    public int onStartCommand(final Intent intent, int flags, int startId) {
-
-        Uri uri = intent.getParcelableExtra("uri");
-        final String mCurrentPhotoPath = intent.getStringExtra("mCurrentPhotoPath");
-        //filterList = intent.getSerializableExtra("filterList");
         Bitmap bitmap = null;
         //Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
-        try {
-            bitmap = BitmapUtils.rotateBitmapOrientation(mCurrentPhotoPath);
-        } catch (final Exception e) {
-            stopSelf();
+        try{
+            Bitmap mBitmap = BitmapUtils.rotateBitmapOrientation(mCurrentPhotoPath);
+            bitmap = mBitmap;
+        }catch (final Exception e){
         }
 
         //키값 생성
         double Random = Math.random();
 
-        final String RandomKey = ToSha256(String.valueOf(Random));
+        String RandomKey = ToSha256(String.valueOf(Random));
 
         //파일 암호화
         try {
@@ -197,50 +141,49 @@ public class RecognizeImageService extends Service {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        queValue = new RecognizeQue(mCurrentPhotoPath, bitmap, RandomKey);
-        recognizeQue.add(queValue);
 
-        threadPool.execute( new Runnable()
-        {
-                public void run()
-            {
-                //탐지된 출력값 초기화
-                resultList = new ArrayList<>();
-
-                final GlobalValue globalValue = (GlobalValue) getApplication();
-
-                int recognizeLevel = globalValue.getRecognizeLevel();
-
-                if (usableRecognizeLevel != recognizeLevel) {
-                    if (recognizeQue.get(0).get_bitmap().getWidth() != PicWidth || recognizeQue.get(0).get_bitmap().getHeight() != PicHeight) {
+        GlobalValue globalValue = (GlobalValue) getApplication();
 
 
-                        int Size = TF_OD_API_INPUT_SIZE * recognizeLevel;
 
-                        for (int size = Size; recognizeQue.get(0).get_bitmap().getWidth() <= Size || recognizeQue.get(0).get_bitmap().getHeight() <= Size; size -= TF_OD_API_INPUT_SIZE) {
-                            --recognizeLevel;
-                        }
+        if (bitmap.getWidth()!=PicWidth||bitmap.getHeight()!=PicHeight){
 
-                        PicWidth = recognizeQue.get(0).get_bitmap().getWidth();
-                        PicHeight = recognizeQue.get(0).get_bitmap().getHeight();
-                    }
+            int recognizeLevel = globalValue.getRecognizeLevel();
 
-                    MAIN_TF_OD_API_INPUT_SIZE = TF_OD_API_INPUT_SIZE * recognizeLevel;
-                    usableRecognizeLevel = recognizeLevel;
+            int Size = TF_OD_API_INPUT_SIZE*recognizeLevel;
 
-                }
-                Bitmap bitmap = Bitmap.createScaledBitmap(recognizeQue.get(0).get_bitmap(), MAIN_TF_OD_API_INPUT_SIZE, MAIN_TF_OD_API_INPUT_SIZE, false);
-                //final Bitmap finBitmap = bitmap;
+            for (int size=Size; bitmap.getWidth()<=Size || bitmap.getHeight()<=Size; size-=TF_OD_API_INPUT_SIZE){
+                --recognizeLevel;
+            }
 
+            MAIN_TF_OD_API_INPUT_SIZE = TF_OD_API_INPUT_SIZE*recognizeLevel;
+            usableRecognizeLevel = recognizeLevel;
+            PicWidth = bitmap.getWidth();
+            PicHeight = bitmap.getHeight();
+        }
+
+        bitmap = Bitmap.createScaledBitmap(bitmap, MAIN_TF_OD_API_INPUT_SIZE, MAIN_TF_OD_API_INPUT_SIZE, false);
+
+
+        final Bitmap finBitmap = bitmap;
         if (globalValue.getRecognizeState()){
             //서버인식
-            requestRecognize(bitmap, usableRecognizeLevel, recognizeQue.get(0).get_path(), recognizeQue.get(0).get_key());
-            recognizeQue.remove(0);
+            requestRecognize(bitmap, usableRecognizeLevel, mCurrentPhotoPath, RandomKey);
+
+
+
+
         }
 
         else {
             //내장인식
+
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
                     try {
+                        Bitmap bitmap = finBitmap;
+
 
                         ArrayList<String> tmpList = new ArrayList<String>();
 
@@ -258,15 +201,8 @@ public class RecognizeImageService extends Service {
                                     results = classifier.recognizeImage(subBitmap);
 
                                     for (Classifier.Recognition result : results) {
-                                        if (result.getConfidence() > 0.8){
-
-                                            if (tmpList.indexOf(result.getTitle()) < 0) {
-                                                tmpList.add(result.getTitle());
-                                            }
-
-                                        }
-                                        else{
-                                            break;
+                                        if (tmpList.indexOf(result.getTitle()) < 0) {
+                                            tmpList.add(result.getTitle());
                                         }
                                     }
                                 }
@@ -274,52 +210,39 @@ public class RecognizeImageService extends Service {
                         }
 
                         bitmap = Bitmap.createScaledBitmap(bitmap, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE, false);
-                        Log.d("TAG","recognizeQue : "+ recognizeQue.toString());
                         final List<Classifier.Recognition> results = classifier.recognizeImage(bitmap);
                         for (Classifier.Recognition result: results){
-                            if (result.getConfidence()>0.8)
-                            {
                             if(tmpList.indexOf(result.getTitle())<0){
-                                tmpList.add(result.getTitle());
-                            }
-                            }
-                            else{
-                                break;
+                                tmpList.add(result.getTitle()+result.getConfidence());
                             }
                         }
+
                         LOGGER.i("Detect: %s", tmpList);
                         SearchResult(tmpList);
                         //superviseFilter(bitmap,mCurrentPhotoPath,RandomKey);
 
 
-                        superviseFilter(bitmap,recognizeQue.get(0).get_path(),recognizeQue.get(0).get_key());
-                        recognizeQue.remove(0);
+
+
                     }catch (final Exception e) {
                         throw new RuntimeException("Error  TensorFlow!", e);
                     }
 
+
+                }
+            });
+
         }
-            }
 
-        });
 
-        return Service.START_REDELIVER_INTENT;
+
+
     }
 
 
 
-    @Override
-    public void onDestroy() {
-        Log.d("TAG","onPause " + this);
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                classifier.close();
-            }
-        });
-        //stopSelf();
-        super.onDestroy();
-    }
+
+
 
     /***
      *
@@ -393,16 +316,12 @@ public class RecognizeImageService extends Service {
         fos.close();
         fis.close();
         File removeFile = new File(path);
-        if (option==1){removeFile = new File(path + getString(R.string.locked_file_name));}
-
         if(removeFile.delete()){
             Log.d("TAG","삭제완");
         }
         else{
             Log.d("TAG","삭제 ㄴㄴ");
         }
-
-
 
     }
 
@@ -645,7 +564,7 @@ public class RecognizeImageService extends Service {
     private void requestRecognize(final Bitmap bitmap, int size, final String path, final String randomKey) {
 
 
-        SyncHttpClient requestRecognizePost = new SyncHttpClient();
+        AsyncHttpClient requestRecognizePost = new AsyncHttpClient();
 
         requestRecognizePost.addHeader(getString(R.string.auth_key), CookieManager.getInstance().getCookie(getString(R.string.token_key)));
         requestRecognizePost.getThreadPool();

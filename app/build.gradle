@@ -14,9 +14,7 @@ android {
         ndk {
             abiFilters "${cpuType}"
         }
-        jackOptions {
-            enabled true
-        }
+
     }
     buildTypes {
         release {

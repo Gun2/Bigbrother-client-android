@@ -447,7 +447,7 @@ public class DetectorCameraActivity extends Activity implements OnImageAvailable
 
     private static final int TF_OD_API_INPUT_SIZE = 300;
     private static final String TF_OD_API_MODEL_FILE =
-            "file:///android_asset/frozen_test001_graph.pb";
+            "file:///android_asset/frozen_inference_graph.pb";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/coco_labels_list_test.txt";
     private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
     private static final boolean MAINTAIN_ASPECT = false;

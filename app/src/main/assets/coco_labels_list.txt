@@ -1,5 +1,5 @@
 ???
-사람
+person
 bicycle
 car
 motorcycle
@@ -45,7 +45,7 @@ tennis racket
 bottle
 ???
 wine glass
-컵
+cup
 fork
 knife
 spoon
@@ -57,10 +57,10 @@ orange
 broccoli
 carrot
 hot dog
-피자
+pizza
 donut
 cake
-의자
+chair
 couch
 potted plant
 bed
@@ -70,11 +70,11 @@ dining table
 ???
 toilet
 ???
-티비
-노트북
-마우스
+tv
+laptop
+mouse
 remote
-키보드
+keyboard
 cell phone
 microwave
 oven
@@ -82,7 +82,7 @@ toaster
 sink
 refrigerator
 ???
-책
+book
 clock
 vase
 scissors

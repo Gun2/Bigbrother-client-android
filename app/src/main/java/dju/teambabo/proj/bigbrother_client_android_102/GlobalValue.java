@@ -18,7 +18,7 @@ public class GlobalValue extends Application {
     private ArrayList<FilterList> guardListLabel = new ArrayList<>();
     private ArrayList<String> guardTempLabel = new ArrayList<>();
     private Boolean recognizeState = false;
-    private int recognizeLevel= 2;
+    private int recognizeLevel= 1;
 
     public ArrayList<FilterList> getGlobalValueLabeldList(){
 

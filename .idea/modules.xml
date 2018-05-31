@@ -3,9 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Bigbrother-client-android.iml" filepath="$PROJECT_DIR$/Bigbrother-client-android.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Bigbrother-client-android-1.0.2.iml" filepath="$PROJECT_DIR$/Bigbrother-client-android-1.0.2.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Bigbrother-client-android-master.iml" filepath="$PROJECT_DIR$/Bigbrother-client-android-master.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Bigbrother-client-android-master-master.iml" filepath="$PROJECT_DIR$/Bigbrother-client-android-master-master.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
