@@ -150,6 +150,8 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
         //권한 체크
         checkPermission();
 
+
+
         Ask.on(this)
                 .forPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
                 .withRationales("비콘 감지를 위한 권한을 요청합니다.") //optional
@@ -765,6 +767,7 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
                 try {
                     int count;
                     guardListLabel.clear();
+
                     for (count = 0; count < response.length(); count++) {
                         JSONArray ja = response;
                         JSONObject order = ja.optJSONObject(count);
@@ -782,10 +785,21 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
                     //응답은 성공하였으나 값이 올바르지 않음
                     e.printStackTrace();
                 }
+                int recogLevel = 1;
 
+                try {
+                    JSONArray ja = response;
+
+                    JSONObject order = ja.optJSONObject(0);
+                    recogLevel = order.getInt("recognizeLevel");
+                }catch (Exception e) {
+                    //응답은 성공하였으나 값이 올바르지 않음
+                    e.printStackTrace();
+                }
                 //전역변수 세팅
                 GlobalValue globalValue = (GlobalValue) getApplication();
                 globalValue.setGlobalValueLabeldList(guardListLabel);
+                globalValue.setRecognizeLevel(recogLevel);
 
                 Log.d("TAG","guardListLabel"+guardListLabel.toString());
                 //Log.d("TAG", globalValue.getGlobalValueLabeldList().toString());
@@ -818,11 +832,16 @@ public class LoginActivity extends AppCompatActivity implements BeaconConsumer {
             //필터 갱신
             GlobalValue globalValue = (GlobalValue) getApplication();
             //guardListText = globalValue.getGlobalValueLabeldList();
-
+            guardListLabel = globalValue.getGlobalValueLabeldList();
             Log.d("TAG","globalValue.getGlobalValueLabeldList : "+globalValue.getGlobalValueLabeldList().toString());
             _filterRenewHandler.sendEmptyMessageDelayed(0, 7000);
         }
     };
+
+
+
+
+
 
 }
 

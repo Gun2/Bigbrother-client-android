@@ -19,6 +19,7 @@ public class FilterList{
         _picRequest = picRequest;
         _pk = pk;
     }
+
     @Override
     public String toString() {
         String resultString = "";

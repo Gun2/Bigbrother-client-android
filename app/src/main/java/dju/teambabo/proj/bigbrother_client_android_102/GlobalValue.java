@@ -17,6 +17,8 @@ public class GlobalValue extends Application {
     private ArrayList<String> guardTempText = new ArrayList<>();
     private ArrayList<FilterList> guardListLabel = new ArrayList<>();
     private ArrayList<String> guardTempLabel = new ArrayList<>();
+    private Boolean recognizeState = false;
+    private int recognizeLevel= 1;
 
     public ArrayList<FilterList> getGlobalValueLabeldList(){
 
@@ -28,6 +30,15 @@ public class GlobalValue extends Application {
         return guardListText;
     }
 
+    public Boolean getRecognizeState(){
+
+        return recognizeState;
+    }
+
+    public int getRecognizeLevel(){
+        return recognizeLevel;
+    }
+
     public void setGlobalValueLabeldList(ArrayList<FilterList> mList){
         this.guardListLabel = mList;
     }
@@ -35,4 +46,10 @@ public class GlobalValue extends Application {
     public void setGlobalValueTextList(ArrayList<ArrayList<String>> mList){
         this.guardListText = mList;
     }
+
+    public void setRacognizeState(Boolean flag){
+        this.recognizeState = flag;
+    }
+
+    public void setRecognizeLevel(int num){ this.recognizeLevel = num; }
 }
